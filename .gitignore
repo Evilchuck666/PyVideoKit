@@ -1,0 +1,8 @@
+*
+!*/
+!*.py
+!LICENSE
+!pyproject.toml
+!README.md
+!.gitattributes
+!.gitignore
