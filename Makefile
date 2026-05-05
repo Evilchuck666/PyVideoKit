@@ -6,7 +6,8 @@ META_DIR := .
 
 .PHONY: help aur build-all build-cli build-gui build-libs build-meta \
         clean-all clean-aur clean-cli clean-gui clean-libs clean-meta \
-        install-all install-cli install-gui install-libs upload
+        clean-pkgs install-all install-cli install-gui install-libs \
+        uninstall-all uninstall-cli uninstall-gui uninstall-libs upload
 
 help:
 	@echo "Targets disponibles:"
@@ -22,11 +23,16 @@ help:
 	@echo "  clean-gui    Elimina los artefactos de build de PyVideoKit-GUI"
 	@echo "  clean-libs   Elimina los artefactos de build de PyVideoKit-Libs"
 	@echo "  clean-meta   Elimina los artefactos de build del meta-paquete PyVideoKit"
+	@echo "  clean-pkgs   Elimina todos los paquetes wheel generados en PKGs/"
 	@echo "  help         Muestra esta ayuda"
 	@echo "  install-all  Instala todos los paquetes wheel desde PKGs/"
 	@echo "  install-cli  Instala el wheel de PyVideoKit-CLI desde PKGs/"
 	@echo "  install-gui  Instala el wheel de PyVideoKit-GUI desde PKGs/"
 	@echo "  install-libs Instala el wheel de PyVideoKit-Libs desde PKGs/"
+	@echo "  uninstall-all  Desinstala todos los paquetes PyVideoKit"
+	@echo "  uninstall-cli  Desinstala el paquete PyVideoKit-CLI"
+	@echo "  uninstall-gui  Desinstala el paquete PyVideoKit-GUI"
+	@echo "  uninstall-libs Desinstala el paquete PyVideoKit-Libs"
 	@echo "  upload       Sube todos los wheels de PKGs/ a PyPI"
 
 aur:
@@ -76,6 +82,9 @@ clean-libs:
 clean-meta:
 	rm -rf dist/ build/ PyVideoKit.egg-info/
 
+clean-pkgs:
+	rm -rf PKGs/
+
 install-all: install-libs install-cli install-gui
 
 install-cli:
@@ -89,6 +98,17 @@ install-gui:
 install-libs:
 	$(MAKE) build-libs
 	pip install --break-system-packages PKGs/pyvideokit_libs-*.whl
+
+uninstall-all: uninstall-cli uninstall-gui uninstall-libs
+
+uninstall-cli:
+	pip uninstall -y PyVideoKit-CLI --break-system-packages
+
+uninstall-gui:
+	pip uninstall -y PyVideoKit-GUI --break-system-packages
+
+uninstall-libs:
+	pip uninstall -y PyVideoKit-Libs --break-system-packages
 
 upload:
 	twine upload PKGs/*.whl --skip-existing
