@@ -3,7 +3,7 @@ CLI_DIR := PyVideoKit-CLI
 GUI_DIR := PyVideoKit-GUI
 LIBS_DIR := PyVideoKit-Libs
 
-.PHONY: help aur build-all build-cli build-gui build-libs clean-all clean-cli clean-gui clean-libs install-all install-cli install-gui install-libs
+.PHONY: help aur build-all build-cli build-gui build-libs clean-all clean-aur clean-cli clean-gui clean-libs install-all install-cli install-gui install-libs
 
 help:
 	@echo "Targets disponibles:"
@@ -13,6 +13,7 @@ help:
 	@echo "  build-gui    Construye el paquete wheel de PyVideoKit-GUI y limpia artefactos"
 	@echo "  build-libs   Construye el paquete wheel de PyVideoKit-Libs y limpia artefactos"
 	@echo "  clean-all    Elimina los artefactos de build de todos los proyectos"
+	@echo "  clean-aur    Elimina los artefactos de build de PyVideoKit-AUR"
 	@echo "  clean-cli    Elimina los artefactos de build de PyVideoKit-CLI"
 	@echo "  clean-gui    Elimina los artefactos de build de PyVideoKit-GUI"
 	@echo "  clean-libs   Elimina los artefactos de build de PyVideoKit-Libs"
