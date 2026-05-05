@@ -7,7 +7,8 @@ META_DIR := .
 .PHONY: help aur build-all build-cli build-gui build-libs build-meta \
         clean-all clean-aur clean-cli clean-gui clean-libs clean-meta \
         clean-pkgs install-all install-cli install-gui install-libs \
-        uninstall-all uninstall-cli uninstall-gui uninstall-libs upload
+        uninstall-all uninstall-cli uninstall-gui uninstall-libs upload \
+        sync-aur
 
 help:
 	@echo "Available targets:"
@@ -33,7 +34,13 @@ help:
 	@echo "  uninstall-cli  Uninstall the PyVideoKit-CLI package"
 	@echo "  uninstall-gui  Uninstall the PyVideoKit-GUI package"
 	@echo "  uninstall-libs Uninstall the PyVideoKit-Libs package"
+	@echo "  sync-aur     Copy PKGBUILD and .SRCINFO from AUR/ to arch/ and stage for commit"
 	@echo "  upload       Upload all wheels from PKGs/ to PyPI"
+
+sync-aur:
+	cp $(AUR_DIR)/PKGBUILD arch/PKGBUILD
+	cp $(AUR_DIR)/.SRCINFO arch/.SRCINFO
+	git add arch/PKGBUILD arch/.SRCINFO
 
 aur:
 	cd $(AUR_DIR) && makepkg -si

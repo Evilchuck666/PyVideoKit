@@ -4,4 +4,6 @@
 !README.md
 !LICENSE
 !pyproject.toml
-!.gitmodules
+!arch/
+!arch/PKGBUILD
+!arch/.SRCINFO

@@ -1,0 +1,37 @@
+pkgbase = pyvideokit
+	pkgdesc = FFmpeg-based video processing tools
+	pkgver = 0.2.0
+	pkgrel = 1
+	url = https://github.com/Evilchuck666
+	arch = any
+	license = GPL-3.0-only
+	makedepends = git
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-setuptools
+	makedepends = python-wheel
+	source = PyVideoKit-Libs::git+https://github.com/Evilchuck666/PyVideoKit-Libs.git
+	source = PyVideoKit-CLI::git+https://github.com/Evilchuck666/PyVideoKit-CLI.git
+	source = PyVideoKit-GUI::git+https://github.com/Evilchuck666/PyVideoKit-GUI.git
+	sha256sums = SKIP
+	sha256sums = SKIP
+	sha256sums = SKIP
+
+pkgname = python-pyvideokit-libs
+	pkgdesc = Python library for FFmpeg-based video processing
+	depends = python
+	depends = ffmpeg
+	depends = sox
+
+pkgname = python-pyvideokit-cli
+	pkgdesc = CLI for PyVideoKit — FFmpeg-based video processing
+	depends = python
+	depends = python-click
+	depends = python-rich
+	depends = python-pyvideokit-libs
+
+pkgname = python-pyvideokit-gui
+	pkgdesc = GUI for PyVideoKit — FFmpeg-based video processing
+	depends = python
+	depends = pyside6
+	depends = python-pyvideokit-libs
