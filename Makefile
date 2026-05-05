@@ -24,7 +24,7 @@ help:
 
 aur:
 	cd $(AUR_DIR) && makepkg -si
-	rm -rf $(AUR_DIR)/src $(AUR_DIR)/pkg $(AUR_DIR)/*.pkg.tar.zst $(AUR_DIR)/PyVideoKit-Libs $(AUR_DIR)/PyVideoKit-CLI
+	$(MAKE) clean-aur
 
 build-all: build-cli build-gui build-libs
 
@@ -47,6 +47,9 @@ build-libs:
 	$(MAKE) clean-libs
 
 clean-all: clean-cli clean-gui clean-libs
+
+clean-aur:
+		rm -rf $(AUR_DIR)/src $(AUR_DIR)/pkg $(AUR_DIR)/*.pkg.tar.zst $(AUR_DIR)/PyVideoKit-Libs $(AUR_DIR)/PyVideoKit-CLI $(AUR_DIR)/PyVideoKit-GUI
 
 clean-cli:
 	rm -rf $(CLI_DIR)/dist $(CLI_DIR)/build $(CLI_DIR)/src/PyVideoKit_CLI.egg-info
