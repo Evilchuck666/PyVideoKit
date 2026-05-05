@@ -1,4 +1,4 @@
 [submodule "AUR"]
 	path = AUR
-	url = ssh://aur@aur.archlinux.org/pyvideokit.git
+	url = https://aur.archlinux.org/pyvideokit.git
 	branch = master
