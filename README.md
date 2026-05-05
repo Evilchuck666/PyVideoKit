@@ -3,25 +3,54 @@
 ![Python](https://img.shields.io/badge/python-%3E%3D3.10-blue)
 ![License](https://img.shields.io/badge/license-GPLv3-green)
 
-Monorepo raíz de PyVideoKit, un conjunto de herramientas Python para procesamiento de vídeo basado en FFmpeg.
+FFmpeg-based video processing toolkit for Python — featuring a library, a CLI, and a desktop GUI.
 
 ---
 
-## 📦 Subdirectorios
+## 📦 Installation
 
-- 📚 **PyVideoKit-Libs/** — Librería Python principal. Contiene las funciones de procesamiento de vídeo (FFmpeg, FFprobe, SoX). Es la dependencia base del resto de paquetes.
-- 💻 **PyVideoKit-CLI/** — Interfaz de línea de comandos construida sobre PyVideoKit-Libs. Expone cada operación como un comando independiente (`pvk`, `trim-video`, `fade-video`, etc.).
-- 🖥️ **PyVideoKit-GUI/** — Interfaz gráfica de usuario. En desarrollo.
-- 🏗️ **AUR/** — PKGBUILD para Arch Linux. Construye e instala `python-pyvideokit-libs` y `python-pyvideokit-cli` para Pacman.
+### 🏗️ Arch Linux (AUR)
+
+Install all three packages at once:
+
+```bash
+yay -S python-pyvideokit-libs python-pyvideokit-cli python-pyvideokit-gui
+```
+
+System dependencies (FFmpeg, FFprobe, SoX) are pulled in automatically by pacman.
+
+### 🐍 Other systems (pip)
+
+```bash
+pip install PyVideoKit
+```
+
+This installs PyVideoKit-Libs, PyVideoKit-CLI, and PyVideoKit-GUI in one go.
+Make sure **FFmpeg**, **FFprobe**, and **SoX** are available in your `PATH`.
+
+---
+
+## 🗂️ Subprojects
+
+- 📚 **[PyVideoKit-Libs](PyVideoKit-Libs/)** — Core Python library. All video processing functions built on top of FFmpeg, FFprobe, and SoX. Base dependency for the other packages.
+- 💻 **[PyVideoKit-CLI](PyVideoKit-CLI/)** — Command-line interface built on PyVideoKit-Libs. Each operation is exposed as a standalone command (`pvk`, `trim-video`, `fade-video`, etc.).
+- 🖥️ **[PyVideoKit-GUI](PyVideoKit-GUI/)** — PySide6 desktop GUI. Tabbed interface with real-time progress tracking for all operations.
+- 🏗️ **[AUR](AUR/)** — PKGBUILD for Arch Linux. Builds and installs `python-pyvideokit-libs`, `python-pyvideokit-cli`, and `python-pyvideokit-gui` via pacman.
 
 ---
 
 ## 🔧 Build
 
 ```bash
-make help        # muestra todos los targets disponibles
-make build-libs  # construye el wheel de PyVideoKit-Libs
-make build-cli   # construye el wheel de PyVideoKit-CLI
-make build-all   # construye ambos wheels
-make aur         # construye e instala los paquetes AUR con makepkg
+make help          # show all available targets
+make build-all     # build all wheels (Libs + CLI + GUI + meta-package)
+make install-all   # build and install all packages locally
+make upload        # upload all wheels to PyPI
+make aur           # build and install AUR packages with makepkg
 ```
+
+---
+
+## ⚖️ License
+
+This project is licensed under the GPLv3 License — see the [LICENSE](LICENSE) file for details.
