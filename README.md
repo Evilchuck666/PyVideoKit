@@ -35,7 +35,7 @@ Make sure **FFmpeg**, **FFprobe**, and **SoX** are available in your `PATH`.
 - 📚 **[PyVideoKit-Libs](PyVideoKit-Libs/)** — Core Python library. All video processing functions built on top of FFmpeg, FFprobe, and SoX. Base dependency for the other packages.
 - 💻 **[PyVideoKit-CLI](PyVideoKit-CLI/)** — Command-line interface built on PyVideoKit-Libs. Each operation is exposed as a standalone command (`pvk`, `trim-video`, `fade-video`, etc.).
 - 🖥️ **[PyVideoKit-GUI](PyVideoKit-GUI/)** — PySide6 desktop GUI. Tabbed interface with real-time progress tracking for all operations.
-- 🏗️ **[arch/](arch/)** — PKGBUILD and .SRCINFO for Arch Linux. Builds and installs `python-pyvideokit-libs`, `python-pyvideokit-cli`, and `python-pyvideokit-gui` via pacman. Kept in sync with the [AUR package](https://aur.archlinux.org/packages/pyvideokit) via `make sync-aur`.
+- 🏗️ **[arch/](arch/)** — PKGBUILD and .SRCINFO for Arch Linux. Builds and installs `python-pyvideokit-libs`, `python-pyvideokit-cli`, and `python-pyvideokit-gui` via pacman. Mirrors the [AUR package](https://aur.archlinux.org/packages/pyvideokit).
 
 ---
 
@@ -45,9 +45,7 @@ Make sure **FFmpeg**, **FFprobe**, and **SoX** are available in your `PATH`.
 make help          # show all available targets
 make build-all     # build all wheels (Libs + CLI + GUI + meta-package)
 make install-all   # build and install all packages locally
-make upload        # upload all wheels to PyPI
 make aur           # build and install AUR packages with makepkg
-make sync-aur      # copy PKGBUILD and .SRCINFO from AUR/ to arch/ and stage
 ```
 
 ---
