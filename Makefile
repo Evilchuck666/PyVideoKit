@@ -91,4 +91,4 @@ install-libs:
 	pip install --break-system-packages PKGs/pyvideokit_libs-*.whl
 
 upload:
-	twine upload PKGs/*.whl
+	twine upload PKGs/*.whl --skip-existing
