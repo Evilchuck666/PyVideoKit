@@ -17,7 +17,7 @@ Install all three packages at once:
 yay -S python-pyvideokit-libs python-pyvideokit-cli python-pyvideokit-gui
 ```
 
-System dependencies (FFmpeg, FFprobe, SoX) are pulled in automatically by pacman.
+Pacman pulls in system dependencies (FFmpeg, FFprobe, SoX) automatically.
 
 ### 🐍 Other systems (pip)
 
@@ -70,7 +70,7 @@ Keywords=video;ffmpeg;trim;fade;vhs;youtube;convert;
 EOF
 ```
 
-**3. Refresh the icon cache** *(may be required on some desktop environments)*:
+**3. Refresh the icon cache** *(maybe required in some desktop environments)*:
 
 ```bash
 gtk-update-icon-cache ~/.local/share/icons/hicolor/
@@ -82,10 +82,10 @@ PyVideoKit will now appear in your application launcher.
 
 ## 🗂️ Subprojects
 
-- 📚 **[PyVideoKit-Libs](PyVideoKit-Libs/)** — Core Python library. All video processing functions built on top of FFmpeg, FFprobe, and SoX. Base dependency for the other packages.
-- 💻 **[PyVideoKit-CLI](PyVideoKit-CLI/)** — Command-line interface built on PyVideoKit-Libs. Each operation is exposed as a standalone command (`pvk`, `trim-video`, `fade-video`, etc.).
-- 🖥️ **[PyVideoKit-GUI](PyVideoKit-GUI/)** — PySide6 desktop GUI. Tabbed interface with real-time progress tracking for all operations.
-- 🏗️ **[arch/](arch/)** — PKGBUILD and .SRCINFO for Arch Linux. Builds and installs `python-pyvideokit-libs`, `python-pyvideokit-cli`, and `python-pyvideokit-gui` via pacman. Mirrors the [AUR package](https://aur.archlinux.org/packages/pyvideokit).
+- 📚 **[PyVideoKit-Libs](PyVideoKit-Libs)** — Core Python library. All video processing functions are built on top of FFmpeg, FFprobe, and SoX. Base dependency for the other packages.
+- 💻 **[PyVideoKit-CLI](PyVideoKit-CLI)** — Command-line interface built on PyVideoKit-Libs. Each operation is exposed as a standalone command (`pvk`, `trim-video`, `fade-video`, etc.).
+- 🖥️ **[PyVideoKit-GUI](PyVideoKit-GUI)** — PySide6 desktop GUI. Tabbed interface with drag-and-drop input, batch processing for Convert/VHS/Extract Audio/YouTube.
+- 🏗️ **[arch/](arch)** — PKGBUILD and .SRCINFO for Arch Linux. Builds and installs `python-pyvideokit-libs`, `python-pyvideokit-cli`, and `python-pyvideokit-gui` via pacman. Mirrors the [AUR package](https://aur.archlinux.org/packages/pyvideokit).
 
 ---
 
