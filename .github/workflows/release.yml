@@ -1,0 +1,248 @@
+name: Build packages
+
+# Disabled by default. Pushes and pull requests only build when the repository
+# variable PYVIDEOKIT_CI is set to "true" (Settings → Secrets and variables →
+# Actions → Variables); otherwise the run shows up as skipped and uses no
+# minutes. "Run workflow" always works: leave the version empty to just build,
+# or give one (e.g. 0.4.0, matching every pyproject.toml and arch/PKGBUILD) to
+# also publish a GitHub release with the four wheels.
+#
+# The code lives in PyVideoKit-Libs, PyVideoKit-CLI and PyVideoKit-GUI, so each
+# run checks out the current main branch of those repositories next to this one,
+# in the same layout the Makefile expects.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pyproject.toml'
+      - 'Makefile'
+      - 'README.md'
+      - 'arch/**'
+      - '.github/workflows/release.yml'
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, without the v (e.g. 0.4.0). Leave empty to only build.'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+
+jobs:
+  build:
+    name: Build wheels
+    if: github.event_name == 'workflow_dispatch' || vars.PYVIDEOKIT_CI == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      versions: ${{ steps.versions.outputs.summary }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ github.repository_owner }}/PyVideoKit-Libs
+          path: PyVideoKit-Libs
+          persist-credentials: false
+
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ github.repository_owner }}/PyVideoKit-CLI
+          path: PyVideoKit-CLI
+          persist-credentials: false
+
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ github.repository_owner }}/PyVideoKit-GUI
+          path: PyVideoKit-GUI
+          persist-credentials: false
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+
+      - name: Check versions
+        id: versions
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          if [[ -n "$VERSION" && ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Use a version like 0.4.0, without the v."
+            exit 1
+          fi
+
+          python - <<'EOF'
+          import os, re, subprocess, sys, tomllib
+
+          wanted = os.environ["VERSION"]
+          found = {}
+          for path in (".", "PyVideoKit-Libs", "PyVideoKit-CLI", "PyVideoKit-GUI"):
+              with open(f"{path}/pyproject.toml", "rb") as f:
+                  project = tomllib.load(f)["project"]
+              sha = subprocess.check_output(["git", "-C", path, "rev-parse", "--short", "HEAD"], text=True).strip()
+              found[project["name"]] = (project["version"], sha)
+          with open("arch/PKGBUILD") as f:
+              found["arch/PKGBUILD"] = (re.search(r"^pkgver=(\S+)", f.read(), re.M).group(1), "-")
+
+          for name, (version, sha) in found.items():
+              print(f"{name:16} {version:10} {sha}")
+
+          versions = {version for version, _ in found.values()}
+          if len(versions) != 1:
+              print("::error::Versions differ between packages. Bump them all to the same version first.")
+              sys.exit(1)
+          if wanted and versions != {wanted}:
+              print(f"::error::Packages say {versions.pop()}. Bump them all to {wanted} first.")
+              sys.exit(1)
+
+          lines = [f"- **{name}** {version} (`{sha}`)" for name, (version, sha) in found.items() if sha != "-"]
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write("summary<<EOF\n" + "\n".join(lines) + "\nEOF\n")
+          EOF
+
+      - name: Build wheels
+        run: |
+          python -m pip install build
+          make build-all
+          ls -l PKGs
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: PyVideoKit-wheels
+          path: PKGs/*.whl
+          if-no-files-found: error
+
+  verify:
+    name: Install test (${{ matrix.os }})
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-15]
+        python: ['3.10', '3.13']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      QT_QPA_PLATFORM: offscreen
+      PYTHONIOENCODING: utf-8
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install Qt runtime libraries (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            libegl1 libxkbcommon-x11-0 libxcb-cursor0 \
+            libxcb-icccm4 libxcb-shape0 libxcb-keysyms1
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: PyVideoKit-wheels
+          path: PKGs
+
+      - name: Install wheels
+        run: python -m pip install PKGs/*.whl
+
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          pvk --version
+          pvk --help
+          for cmd in apply-vhs-effect concat-videos convert-to-ffv1 extract-audio fade-video prepare-youtube trim-video; do
+            "$cmd" --help > /dev/null
+          done
+          python - <<'EOF'
+          import pyvideokit_libs
+          from PySide6.QtWidgets import QApplication
+          from pyvideokit_gui._main_window import MainWindow
+
+          print("PyVideoKit-Libs", pyvideokit_libs.__version__)
+          app = QApplication([])
+          window = MainWindow()
+          window.show()
+          app.processEvents()
+          window.close()
+          EOF
+
+  release:
+    name: Publish release
+    needs: [build, verify]
+    if: github.event_name == 'workflow_dispatch' && inputs.version != '' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: pyvideokit-release
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      VERSION: ${{ inputs.version }}
+      RELEASE_SHA: ${{ github.sha }}
+      VERSIONS: ${{ needs.build.outputs.versions }}
+    steps:
+      - name: Check tag
+        run: |
+          set -euo pipefail
+          # An API failure must stop the release, so no "|| true" here.
+          gh api --paginate "repos/$GH_REPO/git/matching-refs/tags/" --jq '.[].ref' > tags.txt
+          if grep -Fxq "refs/tags/v$VERSION" tags.txt; then
+            echo "::error::Tag v$VERSION already exists. Use another version."
+            exit 1
+          fi
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: PyVideoKit-wheels
+          path: release-assets
+
+      - name: Check packages and generate checksums
+        working-directory: release-assets
+        run: |
+          set -euo pipefail
+          for name in pyvideokit pyvideokit_libs pyvideokit_cli pyvideokit_gui; do
+            file="$name-$VERSION-py3-none-any.whl"
+            if [[ ! -s "$file" ]]; then
+              echo "::error::Package $file is missing or empty."
+              exit 1
+            fi
+          done
+          sha256sum *.whl > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Create tag and publish release
+        working-directory: release-assets
+        run: |
+          set -euo pipefail
+          {
+            echo "## Packages"
+            echo
+            echo "$VERSIONS"
+            echo
+            echo "Install everything with \`pip install *.whl\` from this release, \`pip install PyVideoKit\` from PyPI, or \`yay -S python-pyvideokit\` on Arch Linux."
+            echo "FFmpeg, FFprobe and SoX must be available in your \`PATH\`."
+          } > notes.md
+          gh release create "v$VERSION" *.whl SHA256SUMS.txt \
+            --target "$RELEASE_SHA" \
+            --title "PyVideoKit v$VERSION" \
+            --notes-file notes.md \
+            --generate-notes \
+            --latest

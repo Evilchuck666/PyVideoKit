@@ -7,3 +7,6 @@
 !arch/
 !arch/PKGBUILD
 !arch/.SRCINFO
+!.github/
+!.github/workflows/
+!.github/workflows/release.yml
