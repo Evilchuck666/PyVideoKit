@@ -4,12 +4,15 @@ name: Build packages
 # variable PYVIDEOKIT_CI is set to "true" (Settings → Secrets and variables →
 # Actions → Variables); otherwise the run shows up as skipped and uses no
 # minutes. "Run workflow" always works: leave the version empty to just build,
-# or give one (e.g. 0.4.0, matching every pyproject.toml and arch/PKGBUILD) to
-# also publish a GitHub release with the four wheels.
+# or give one (e.g. 0.4.2, matching every pyproject.toml and arch/PKGBUILD) to
+# also publish a GitHub release with the four wheels and upload the PyVideoKit
+# meta-package to PyPI (Trusted Publishing, environment "pypi").
 #
 # The code lives in PyVideoKit-Libs, PyVideoKit-CLI and PyVideoKit-GUI, so each
 # run checks out the current main branch of those repositories next to this one,
-# in the same layout the Makefile expects.
+# in the same layout the Makefile expects. Those repositories publish their own
+# packages to PyPI and bump the shared "pyvideokit" AUR package base, so a
+# release here first checks that both already carry this version.
 
 on:
   push:
@@ -24,7 +27,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release, without the v (e.g. 0.4.0). Leave empty to only build.'
+        description: 'Version to release, without the v (e.g. 0.4.2). Leave empty to only build.'
         required: false
         default: ''
         type: string
@@ -79,7 +82,7 @@ jobs:
           set -euo pipefail
 
           if [[ -n "$VERSION" && ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Use a version like 0.4.0, without the v."
+            echo "::error::Use a version like 0.4.2, without the v."
             exit 1
           fi
 
@@ -112,16 +115,67 @@ jobs:
               out.write("summary<<EOF\n" + "\n".join(lines) + "\nEOF\n")
           EOF
 
+      - name: Check PyPI
+        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          for name in PyVideoKit-Libs PyVideoKit-CLI PyVideoKit-GUI; do
+            if ! curl -fsS -o /dev/null "https://pypi.org/pypi/$name/$VERSION/json"; then
+              echo "::error::$name $VERSION is not on PyPI. Release it from its repository first."
+              exit 1
+            fi
+            echo "$name $VERSION is on PyPI"
+          done
+
+      # The AUR base is bumped by the other repositories, so it is only checked
+      # here: same pkgver, and arch/PKGBUILD must match it apart from pkgrel.
+      # Without a version this only warns.
+      - name: Check the AUR package
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          aur="$RUNNER_TEMP/aur"
+          git clone --quiet --depth 1 https://aur.archlinux.org/pyvideokit.git "$aur"
+          aur_version=$(sed -nE 's/^pkgver=(.*)/\1/p' "$aur/PKGBUILD")
+          echo "AUR pyvideokit $aur_version-$(sed -nE 's/^pkgrel=(.*)/\1/p' "$aur/PKGBUILD")"
+          level=warning
+          [[ -n "$VERSION" ]] && level=error
+          status=0
+          if [[ -n "$VERSION" && "$aur_version" != "$VERSION" ]]; then
+            echo "::error::The AUR package is at $aur_version. Release PyVideoKit-Libs $VERSION first."
+            status=1
+          fi
+          if ! diff -u <(grep -v '^pkgrel=' arch/PKGBUILD) <(grep -v '^pkgrel=' "$aur/PKGBUILD"); then
+            echo "::$level::arch/PKGBUILD differs from the AUR. Copy it from https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=pyvideokit"
+            [[ "$level" == error ]] && status=1
+          fi
+          exit $status
+
       - name: Build wheels
         run: |
-          python -m pip install build
+          python -m pip install build twine
           make build-all
           ls -l PKGs
+
+      - name: Build the meta-package for PyPI
+        run: |
+          python -m build --outdir meta-dist .
+          python -m twine check --strict meta-dist/*
+          rm -rf build PyVideoKit.egg-info
 
       - uses: actions/upload-artifact@v7
         with:
           name: PyVideoKit-wheels
           path: PKGs/*.whl
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: PyVideoKit-meta-dist
+          path: meta-dist/
           if-no-files-found: error
 
   verify:
@@ -145,13 +199,24 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
+      # The runner's Azure mirror sometimes crawls: cap each attempt and, before
+      # retrying, point its mirror list (apt-mirrors.txt) at the main archive.
       - name: Install Qt runtime libraries (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y \
-            libegl1 libxkbcommon-x11-0 libxcb-cursor0 \
-            libxcb-icccm4 libxcb-shape0 libxcb-keysyms1
+          for attempt in 1 2 3; do
+            if timeout 240 sudo apt-get update \
+              && timeout 300 sudo apt-get install --no-install-recommends -y \
+                -o Acquire::Retries=3 -o Acquire::http::Timeout=30 \
+                libegl1 libxkbcommon-x11-0 libxcb-cursor0 \
+                libxcb-icccm4 libxcb-shape0 libxcb-keysyms1; then
+              exit 0
+            fi
+            echo "::warning::apt attempt $attempt failed, switching to archive.ubuntu.com"
+            sudo sed -i 's|azure\.archive\.ubuntu\.com|archive.ubuntu.com|g' \
+              /etc/apt/apt-mirrors.txt /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
+          done
+          exit 1
 
       - uses: actions/download-artifact@v8
         with:
@@ -246,3 +311,24 @@ jobs:
             --notes-file notes.md \
             --generate-notes \
             --latest
+
+  pypi:
+    name: Publish to PyPI
+    needs: release
+    runs-on: ubuntu-24.04
+    environment:
+      name: pypi
+      url: https://pypi.org/project/PyVideoKit/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: PyVideoKit-meta-dist
+          path: dist
+
+      # Only the meta-package: Libs, CLI and GUI are uploaded by their own
+      # repositories. No API token: PyPI trusts this workflow and environment.
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true

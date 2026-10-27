@@ -1,4 +1,4 @@
-AUR_DIR  := AUR
+AUR_DIR  := arch
 CLI_DIR  := PyVideoKit-CLI
 GUI_DIR  := PyVideoKit-GUI
 LIBS_DIR := PyVideoKit-Libs
