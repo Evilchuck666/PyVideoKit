@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PyVideoKit"
-version = "0.4.2"
+version = "0.4.3"
 description = "FFmpeg-based video toolkit: installs PyVideoKit-Libs, the pvk CLI and the PySide6 GUI for trimming, fades, VHS effects, FFV1 masters and 4K ProRes exports"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,9 +16,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "PyVideoKit-Libs>=0.4.2",
-    "PyVideoKit-CLI>=0.4.2",
-    "PyVideoKit-GUI>=0.4.2",
+    "PyVideoKit-Libs>=0.4.3",
+    "PyVideoKit-CLI>=0.4.3",
+    "PyVideoKit-GUI>=0.4.3",
 ]
 keywords = ["ffmpeg", "video", "video-processing", "cli", "gui", "ffv1", "prores", "vhs", "youtube"]
 
