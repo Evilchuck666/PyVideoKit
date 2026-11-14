@@ -9,6 +9,18 @@
 
 FFmpeg-based video processing toolkit for Python — featuring a library, a CLI, and a desktop GUI.
 
+🌐 **Website:** https://evilchuck666.github.io/PyVideoKit/
+
+---
+
+## 📸 Screenshots
+
+| Desktop app | Trim |
+|---|---|
+| ![PyVideoKit-GUI after an FFV1 conversion](site/assets/screenshots/desktop-app.png) | ![PyVideoKit-GUI after a trim](site/assets/screenshots/trim.png) |
+| **Command line** | **Python library** |
+| ![pvk help and a two-second trim](site/assets/screenshots/commands.png) | ![PyVideoKit-Libs Python example](site/assets/screenshots/python-example.png) |
+
 ---
 
 ## 📦 Installation
