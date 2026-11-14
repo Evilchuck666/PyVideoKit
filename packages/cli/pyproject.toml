@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PyVideoKit-CLI"
-version = "0.4.3"
+version = "0.4.4"
 description = "Command-line interface for PyVideoKit: trim, concatenate, fade, VHS effect, WAV extraction, lossless FFV1 masters and 4K ProRes exports for YouTube"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -13,15 +13,15 @@ authors = [{name = "Evilchuck666", email = "carlos.martinez.medina1992@gmail.com
 dependencies = [
     "click>=8.0",
     "rich>=13.0",
-    "PyVideoKit-Libs>=0.4.2",
+    "PyVideoKit-Libs>=0.4.4",
 ]
 keywords = ["ffmpeg", "video", "cli", "video-processing", "ffv1", "prores", "vhs", "youtube"]
 
 [project.urls]
-Homepage = "https://github.com/Evilchuck666/PyVideoKit-CLI"
-Source = "https://github.com/Evilchuck666/PyVideoKit-CLI"
-Issues = "https://github.com/Evilchuck666/PyVideoKit-CLI/issues"
-Releases = "https://github.com/Evilchuck666/PyVideoKit-CLI/releases"
+Homepage = "https://github.com/Evilchuck666/PyVideoKit"
+Source = "https://github.com/Evilchuck666/PyVideoKit"
+Issues = "https://github.com/Evilchuck666/PyVideoKit/issues"
+Releases = "https://github.com/Evilchuck666/PyVideoKit/releases"
 
 [project.scripts]
 pvk              = "pyvideokit_cli._main:cli"

@@ -86,9 +86,9 @@ PyVideoKit will now appear in your application launcher.
 
 ## 🗂️ Subprojects
 
-- 📚 **[PyVideoKit-Libs](https://github.com/Evilchuck666/PyVideoKit-Libs)** — Core Python library. All video processing functions are built on top of FFmpeg, FFprobe, and SoX. Base dependency for the other packages.
-- 💻 **[PyVideoKit-CLI](https://github.com/Evilchuck666/PyVideoKit-CLI)** — Command-line interface built on PyVideoKit-Libs. Each operation is exposed as a standalone command (`pvk`, `trim-video`, `fade-video`, etc.).
-- 🖥️ **[PyVideoKit-GUI](https://github.com/Evilchuck666/PyVideoKit-GUI)** — PySide6 desktop GUI. Tabbed interface with drag-and-drop input, batch processing for Convert/VHS/Extract Audio/YouTube.
+- 📚 **[PyVideoKit-Libs](https://github.com/Evilchuck666/PyVideoKit/tree/main/packages/libs)** — Core Python library. All video processing functions are built on top of FFmpeg, FFprobe, and SoX. Base dependency for the other packages.
+- 💻 **[PyVideoKit-CLI](https://github.com/Evilchuck666/PyVideoKit/tree/main/packages/cli)** — Command-line interface built on PyVideoKit-Libs. Each operation is exposed as a standalone command (`pvk`, `trim-video`, `fade-video`, etc.).
+- 🖥️ **[PyVideoKit-GUI](https://github.com/Evilchuck666/PyVideoKit/tree/main/packages/gui)** — PySide6 desktop GUI. Tabbed interface with drag-and-drop input, batch processing for Convert/VHS/Extract Audio/YouTube.
 - 🏗️ **[arch/](arch)** — PKGBUILD for Arch Linux. Builds `python-pyvideokit-libs`, `python-pyvideokit-cli`, `python-pyvideokit-gui` and the `python-pyvideokit` meta-package. Mirrors the [AUR package base](https://aur.archlinux.org/pkgbase/pyvideokit).
 
 ---

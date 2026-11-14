@@ -1,7 +1,7 @@
 AUR_DIR  := arch
-CLI_DIR  := PyVideoKit-CLI
-GUI_DIR  := PyVideoKit-GUI
-LIBS_DIR := PyVideoKit-Libs
+CLI_DIR  := packages/cli
+GUI_DIR  := packages/gui
+LIBS_DIR := packages/libs
 META_DIR := .
 
 .PHONY: help aur build-all build-cli build-gui build-libs build-meta \
@@ -11,14 +11,14 @@ META_DIR := .
 
 help:
 	@echo "Available targets:"
-	@echo "  aur          	Build and install the PyVideoKit AUR package from the AUR/ directory"
+	@echo "  aur          	Build and install the PyVideoKit AUR package from the arch/ directory"
 	@echo "  build-all    	Build all wheel packages and clean artifacts"
 	@echo "  build-cli    	Build the PyVideoKit-CLI wheel and clean artifacts"
 	@echo "  build-gui    	Build the PyVideoKit-GUI wheel and clean artifacts"
 	@echo "  build-libs   	Build the PyVideoKit-Libs wheel and clean artifacts"
 	@echo "  build-meta   	Build the PyVideoKit meta-package wheel and clean artifacts"
 	@echo "  clean-all    	Remove build artifacts from all projects"
-	@echo "  clean-aur    	Remove build artifacts from PyVideoKit-AUR"
+	@echo "  clean-aur    	Remove build artifacts from the arch/ directory"
 	@echo "  clean-cli    	Remove build artifacts from PyVideoKit-CLI"
 	@echo "  clean-gui    	Remove build artifacts from PyVideoKit-GUI"
 	@echo "  clean-libs   	Remove build artifacts from PyVideoKit-Libs"
@@ -67,7 +67,7 @@ build-meta:
 clean-all: clean-cli clean-gui clean-libs clean-meta
 
 clean-aur:
-	rm -rf $(AUR_DIR)/src $(AUR_DIR)/pkg $(AUR_DIR)/*.pkg.tar.zst $(AUR_DIR)/PyVideoKit-Libs $(AUR_DIR)/PyVideoKit-CLI $(AUR_DIR)/PyVideoKit-GUI
+	rm -rf $(AUR_DIR)/src $(AUR_DIR)/pkg $(AUR_DIR)/*.pkg.tar.zst $(AUR_DIR)/PyVideoKit
 
 clean-cli:
 	rm -rf $(CLI_DIR)/dist $(CLI_DIR)/build $(CLI_DIR)/src/PyVideoKit_CLI.egg-info

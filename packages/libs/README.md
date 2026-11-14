@@ -4,10 +4,10 @@
 ![Python](https://img.shields.io/badge/python-%3E%3D3.10-blue)
 ![Requires](https://img.shields.io/badge/requires-FFmpeg%2C%20SoX-blue)
 [![License](https://img.shields.io/badge/license-GPLv3-green)](LICENSE)
-[![Latest release](https://img.shields.io/github/v/release/Evilchuck666/PyVideoKit-Libs?label=download&sort=semver)](https://github.com/Evilchuck666/PyVideoKit-Libs/releases/latest)
-[![Build and tests](https://github.com/Evilchuck666/PyVideoKit-Libs/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/Evilchuck666/PyVideoKit-Libs/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/Evilchuck666/PyVideoKit?label=download&sort=semver)](https://github.com/Evilchuck666/PyVideoKit/releases/latest)
+[![Build and tests](https://github.com/Evilchuck666/PyVideoKit/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/Evilchuck666/PyVideoKit/actions/workflows/release.yml)
 
-Python library for FFmpeg-based video and audio processing. Provides the core functions behind [PyVideoKit-CLI](https://github.com/Evilchuck666/PyVideoKit-CLI) and [PyVideoKit-GUI](https://github.com/Evilchuck666/PyVideoKit-GUI), and can be used directly in your own Python projects.
+Python library for FFmpeg-based video and audio processing. Provides the core functions behind [PyVideoKit-CLI](https://github.com/Evilchuck666/PyVideoKit/tree/main/packages/cli) and [PyVideoKit-GUI](https://github.com/Evilchuck666/PyVideoKit/tree/main/packages/gui), and can be used directly in your own Python projects.
 
 ---
 

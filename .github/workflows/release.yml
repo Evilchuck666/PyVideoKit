@@ -1,33 +1,33 @@
-name: Build packages
+name: Build and release
 
-# Disabled by default. Pushes and pull requests only build when the repository
-# variable PYVIDEOKIT_CI is set to "true" (Settings → Secrets and variables →
-# Actions → Variables); otherwise the run shows up as skipped and uses no
-# minutes. "Run workflow" always works: leave the version empty to just build,
-# or give one (e.g. 0.4.2, matching every pyproject.toml and arch/PKGBUILD) to
-# also publish a GitHub release with the four wheels and upload the PyVideoKit
-# meta-package to PyPI (Trusted Publishing, environment "pypi").
+# Builds the sdist and wheel of PyVideoKit-Libs, PyVideoKit-CLI, PyVideoKit-GUI
+# (packages/) and the PyVideoKit meta-package, checks them with twine, installs
+# the local wheels on every supported Python and runs each package's
+# scripts/smoke_test.py against real FFmpeg, FFprobe and SoX (the GUI headless,
+# Qt offscreen). It also installs them on Windows and macOS.
 #
-# The code lives in PyVideoKit-Libs, PyVideoKit-CLI and PyVideoKit-GUI, so each
-# run checks out the current main branch of those repositories next to this one,
-# in the same layout the Makefile expects. Those repositories publish their own
-# packages to PyPI and bump the shared "pyvideokit" AUR package base, so a
-# release here first checks that both already carry this version.
+# "Run workflow" with a version (e.g. 0.4.4, matching every pyproject.toml and
+# arch/PKGBUILD) also tags v<version>, publishes one GitHub release with all
+# packages, uploads the four packages to PyPI (Trusted Publishing, environment
+# "pypi") and pushes arch/PKGBUILD to the "pyvideokit" AUR package base (needs
+# the AUR_SSH_PRIVATE_KEY secret). Leave the version empty to only build.
 
 on:
   push:
     branches: [main]
     paths:
+      - 'packages/**'
       - 'pyproject.toml'
-      - 'Makefile'
       - 'README.md'
+      - 'LICENSE'
+      - 'Makefile'
       - 'arch/**'
       - '.github/workflows/release.yml'
   pull_request:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release, without the v (e.g. 0.4.2). Leave empty to only build.'
+        description: 'Version to release, without the v (e.g. 0.4.4). Leave empty to only build.'
         required: false
         default: ''
         type: string
@@ -41,33 +41,12 @@ concurrency:
 
 jobs:
   build:
-    name: Build wheels
-    if: github.event_name == 'workflow_dispatch' || vars.PYVIDEOKIT_CI == 'true'
+    name: Build packages
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    outputs:
-      versions: ${{ steps.versions.outputs.summary }}
     steps:
       - uses: actions/checkout@v7
         with:
-          persist-credentials: false
-
-      - uses: actions/checkout@v7
-        with:
-          repository: ${{ github.repository_owner }}/PyVideoKit-Libs
-          path: PyVideoKit-Libs
-          persist-credentials: false
-
-      - uses: actions/checkout@v7
-        with:
-          repository: ${{ github.repository_owner }}/PyVideoKit-CLI
-          path: PyVideoKit-CLI
-          persist-credentials: false
-
-      - uses: actions/checkout@v7
-        with:
-          repository: ${{ github.repository_owner }}/PyVideoKit-GUI
-          path: PyVideoKit-GUI
           persist-credentials: false
 
       - uses: actions/setup-python@v7
@@ -75,116 +54,145 @@ jobs:
           python-version: '3.13'
 
       - name: Check versions
-        id: versions
         env:
           VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
 
           if [[ -n "$VERSION" && ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Use a version like 0.4.2, without the v."
+            echo "::error::Use a version like 0.4.4, without the v."
             exit 1
           fi
 
           python - <<'EOF'
-          import os, re, subprocess, sys, tomllib
+          import os, re, sys, tomllib
 
           wanted = os.environ["VERSION"]
           found = {}
-          for path in (".", "PyVideoKit-Libs", "PyVideoKit-CLI", "PyVideoKit-GUI"):
+          for path in (".", "packages/libs", "packages/cli", "packages/gui"):
               with open(f"{path}/pyproject.toml", "rb") as f:
                   project = tomllib.load(f)["project"]
-              sha = subprocess.check_output(["git", "-C", path, "rev-parse", "--short", "HEAD"], text=True).strip()
-              found[project["name"]] = (project["version"], sha)
+              found[project["name"]] = project["version"]
           with open("arch/PKGBUILD") as f:
-              found["arch/PKGBUILD"] = (re.search(r"^pkgver=(\S+)", f.read(), re.M).group(1), "-")
+              found["arch/PKGBUILD"] = re.search(r"^pkgver=(\S+)", f.read(), re.M).group(1)
 
-          for name, (version, sha) in found.items():
-              print(f"{name:16} {version:10} {sha}")
+          for name, version in found.items():
+              print(f"{name:16} {version}")
 
-          versions = {version for version, _ in found.values()}
+          versions = set(found.values())
           if len(versions) != 1:
               print("::error::Versions differ between packages. Bump them all to the same version first.")
               sys.exit(1)
           if wanted and versions != {wanted}:
               print(f"::error::Packages say {versions.pop()}. Bump them all to {wanted} first.")
               sys.exit(1)
-
-          lines = [f"- **{name}** {version} (`{sha}`)" for name, (version, sha) in found.items() if sha != "-"]
-          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
-              out.write("summary<<EOF\n" + "\n".join(lines) + "\nEOF\n")
           EOF
 
-      - name: Check PyPI
-        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
-        env:
-          VERSION: ${{ inputs.version }}
+      - name: Build sdists and wheels
         run: |
           set -euo pipefail
-          for name in PyVideoKit-Libs PyVideoKit-CLI PyVideoKit-GUI; do
-            if ! curl -fsS -o /dev/null "https://pypi.org/pypi/$name/$VERSION/json"; then
-              echo "::error::$name $VERSION is not on PyPI. Release it from its repository first."
-              exit 1
-            fi
-            echo "$name $VERSION is on PyPI"
+          python -m pip install --upgrade build twine
+          for dir in packages/libs packages/cli packages/gui .; do
+            python -m build --outdir dist "$dir"
           done
-
-      # The AUR base is bumped by the other repositories, so it is only checked
-      # here: same pkgver, and arch/PKGBUILD must match it apart from pkgrel.
-      # Without a version this only warns.
-      - name: Check the AUR package
-        env:
-          VERSION: ${{ inputs.version }}
-        run: |
-          set -euo pipefail
-          aur="$RUNNER_TEMP/aur"
-          git clone --quiet --depth 1 https://aur.archlinux.org/pyvideokit.git "$aur"
-          aur_version=$(sed -nE 's/^pkgver=(.*)/\1/p' "$aur/PKGBUILD")
-          echo "AUR pyvideokit $aur_version-$(sed -nE 's/^pkgrel=(.*)/\1/p' "$aur/PKGBUILD")"
-          level=warning
-          [[ -n "$VERSION" ]] && level=error
-          status=0
-          if [[ -n "$VERSION" && "$aur_version" != "$VERSION" ]]; then
-            echo "::error::The AUR package is at $aur_version. Release PyVideoKit-Libs $VERSION first."
-            status=1
-          fi
-          if ! diff -u <(grep -v '^pkgrel=' arch/PKGBUILD) <(grep -v '^pkgrel=' "$aur/PKGBUILD"); then
-            echo "::$level::arch/PKGBUILD differs from the AUR. Copy it from https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=pyvideokit"
-            [[ "$level" == error ]] && status=1
-          fi
-          exit $status
-
-      - name: Build wheels
-        run: |
-          python -m pip install build twine
-          make build-all
-          ls -l PKGs
-
-      - name: Build the meta-package for PyPI
-        run: |
-          python -m build --outdir meta-dist .
-          python -m twine check --strict meta-dist/*
-          rm -rf build PyVideoKit.egg-info
+          python -m twine check --strict dist/*
+          ls -l dist
 
       - uses: actions/upload-artifact@v7
         with:
-          name: PyVideoKit-wheels
-          path: PKGs/*.whl
+          name: PyVideoKit-dist
+          path: dist/
           if-no-files-found: error
 
-      - uses: actions/upload-artifact@v7
-        with:
-          name: PyVideoKit-meta-dist
-          path: meta-dist/
-          if-no-files-found: error
-
-  verify:
-    name: Install test (${{ matrix.os }})
+  smoke:
+    name: Smoke test (Python ${{ matrix.python }})
     needs: build
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2025, macos-15]
+        python: ['3.10', '3.11', '3.12', '3.13', '3.14']
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+
+      # The runner's Azure mirror sometimes crawls. Keep the downloaded .debs
+      # in the Actions cache so only a cold run depends on the mirror.
+      - name: Restore apt package cache
+        id: apt-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/apt-debs
+          key: apt-ffmpeg-sox-qt-ubuntu-24.04-v1
+
+      # Cap each attempt and, before retrying, point the runner's mirror list
+      # (apt-mirrors.txt, not ubuntu.sources) at the main Ubuntu archive.
+      - name: Install FFmpeg, SoX and Qt runtime libraries
+        run: |
+          if compgen -G ~/apt-debs/'*.deb' > /dev/null; then
+            sudo cp ~/apt-debs/*.deb /var/cache/apt/archives/
+          fi
+          for attempt in 1 2 3; do
+            if timeout 240 sudo apt-get update \
+              && timeout 300 sudo apt-get install --no-install-recommends -y \
+                -o Acquire::Retries=3 -o Acquire::http::Timeout=30 \
+                -o APT::Keep-Downloaded-Packages=true ffmpeg sox \
+                libegl1 libgl1 libxkbcommon0 libfontconfig1 libdbus-1-3; then
+              mkdir -p ~/apt-debs
+              cp /var/cache/apt/archives/*.deb ~/apt-debs/
+              exit 0
+            fi
+            echo "::warning::apt attempt $attempt failed, switching to archive.ubuntu.com"
+            sudo sed -i 's|azure\.archive\.ubuntu\.com|archive.ubuntu.com|g' \
+              /etc/apt/apt-mirrors.txt /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
+          done
+          exit 1
+
+      - name: Save apt package cache
+        if: steps.apt-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        continue-on-error: true
+        with:
+          path: ~/apt-debs
+          key: apt-ffmpeg-sox-qt-ubuntu-24.04-v1
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: PyVideoKit-dist
+          path: dist
+
+      # All four wheels at once, so pip takes PyVideoKit-Libs from dist/ and
+      # never from PyPI (where this version may not exist yet).
+      - name: Install the wheels
+        run: python -m pip install dist/*.whl
+
+      # Run from a scratch directory so Python imports the installed wheels,
+      # not the src trees.
+      - name: Run smoke tests
+        working-directory: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          for pkg in libs cli gui; do
+            echo "::group::$pkg"
+            python -I "$GITHUB_WORKSPACE/packages/$pkg/scripts/smoke_test.py"
+            echo "::endgroup::"
+          done
+
+  verify:
+    name: Install test (${{ matrix.os }}, Python ${{ matrix.python }})
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025, macos-15]
         python: ['3.10', '3.13']
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
@@ -199,32 +207,13 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      # The runner's Azure mirror sometimes crawls: cap each attempt and, before
-      # retrying, point its mirror list (apt-mirrors.txt) at the main archive.
-      - name: Install Qt runtime libraries (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          for attempt in 1 2 3; do
-            if timeout 240 sudo apt-get update \
-              && timeout 300 sudo apt-get install --no-install-recommends -y \
-                -o Acquire::Retries=3 -o Acquire::http::Timeout=30 \
-                libegl1 libxkbcommon-x11-0 libxcb-cursor0 \
-                libxcb-icccm4 libxcb-shape0 libxcb-keysyms1; then
-              exit 0
-            fi
-            echo "::warning::apt attempt $attempt failed, switching to archive.ubuntu.com"
-            sudo sed -i 's|azure\.archive\.ubuntu\.com|archive.ubuntu.com|g' \
-              /etc/apt/apt-mirrors.txt /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
-          done
-          exit 1
-
       - uses: actions/download-artifact@v8
         with:
-          name: PyVideoKit-wheels
-          path: PKGs
+          name: PyVideoKit-dist
+          path: dist
 
       - name: Install wheels
-        run: python -m pip install PKGs/*.whl
+        run: python -m pip install dist/*.whl
 
       - name: Smoke test
         run: |
@@ -249,7 +238,7 @@ jobs:
 
   release:
     name: Publish release
-    needs: [build, verify]
+    needs: [build, smoke, verify]
     if: github.event_name == 'workflow_dispatch' && inputs.version != '' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     permissions:
@@ -262,7 +251,6 @@ jobs:
       GH_REPO: ${{ github.repository }}
       VERSION: ${{ inputs.version }}
       RELEASE_SHA: ${{ github.sha }}
-      VERSIONS: ${{ needs.build.outputs.versions }}
     steps:
       - name: Check tag
         run: |
@@ -276,7 +264,7 @@ jobs:
 
       - uses: actions/download-artifact@v8
         with:
-          name: PyVideoKit-wheels
+          name: PyVideoKit-dist
           path: release-assets
 
       - name: Check packages and generate checksums
@@ -284,13 +272,14 @@ jobs:
         run: |
           set -euo pipefail
           for name in pyvideokit pyvideokit_libs pyvideokit_cli pyvideokit_gui; do
-            file="$name-$VERSION-py3-none-any.whl"
-            if [[ ! -s "$file" ]]; then
-              echo "::error::Package $file is missing or empty."
-              exit 1
-            fi
+            for file in "$name-$VERSION.tar.gz" "$name-$VERSION-py3-none-any.whl"; do
+              if [[ ! -s "$file" ]]; then
+                echo "::error::Package $file is missing or empty."
+                exit 1
+              fi
+            done
           done
-          sha256sum *.whl > SHA256SUMS.txt
+          sha256sum *.whl *.tar.gz > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Create tag and publish release
@@ -298,14 +287,10 @@ jobs:
         run: |
           set -euo pipefail
           {
-            echo "## Packages"
-            echo
-            echo "$VERSIONS"
-            echo
-            echo "Install everything with \`pip install *.whl\` from this release, \`pip install PyVideoKit\` from PyPI, or \`yay -S python-pyvideokit\` on Arch Linux."
+            echo "Install everything with \`pip install PyVideoKit\` from PyPI, \`pip install *.whl\` from this release, or \`yay -S python-pyvideokit\` on Arch Linux."
             echo "FFmpeg, FFprobe and SoX must be available in your \`PATH\`."
           } > notes.md
-          gh release create "v$VERSION" *.whl SHA256SUMS.txt \
+          gh release create "v$VERSION" *.whl *.tar.gz SHA256SUMS.txt \
             --target "$RELEASE_SHA" \
             --title "PyVideoKit v$VERSION" \
             --notes-file notes.md \
@@ -324,11 +309,74 @@ jobs:
     steps:
       - uses: actions/download-artifact@v8
         with:
-          name: PyVideoKit-meta-dist
+          name: PyVideoKit-dist
           path: dist
 
-      # Only the meta-package: Libs, CLI and GUI are uploaded by their own
-      # repositories. No API token: PyPI trusts this workflow and environment.
+      # All four projects in one upload. No API token: each PyPI project
+      # (PyVideoKit, -Libs, -CLI, -GUI) must trust this workflow and environment.
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           skip-existing: true
+
+  aur:
+    name: Update AUR package
+    needs: release
+    runs-on: ubuntu-24.04
+    container: archlinux:base-devel
+    defaults:
+      run:
+        shell: bash
+    env:
+      VERSION: ${{ inputs.version }}
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+    steps:
+      - name: Check AUR key
+        run: |
+          if [ -z "$AUR_SSH_PRIVATE_KEY" ]; then
+            echo "::error::Add the AUR_SSH_PRIVATE_KEY secret to update the AUR package."
+            exit 1
+          fi
+
+      # Inside a container HOME is /github/home but ssh looks up ~/.ssh from
+      # /etc/passwd (/root), so pass the key and host keys explicitly.
+      - name: Set up SSH and git
+        run: |
+          set -euo pipefail
+          pacman -Syu --noconfirm --needed git openssh
+          ssh_dir="$RUNNER_TEMP/aur-ssh"
+          install -dm700 "$ssh_dir"
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > "$ssh_dir/aur"
+          chmod 600 "$ssh_dir/aur"
+          # Pinned AUR host keys, see https://aur.archlinux.org
+          cat > "$ssh_dir/known_hosts" << 'EOF'
+          aur.archlinux.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEuBKrPzbawxA/k2g6NcyV5jmqwJ2s+zpgZGZ7tpLIcN
+          aur.archlinux.org ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBLMiLrP8pVi5BFX2i3vepSUnpedeiewE5XptnUnau+ZoeUOPkpoCgZZuYfpaIQfhhJJI5qgnjJmr4hyJbe/zxow=
+          EOF
+          echo "GIT_SSH_COMMAND=ssh -i $ssh_dir/aur -o IdentitiesOnly=yes -o UserKnownHostsFile=$ssh_dir/known_hosts -o StrictHostKeyChecking=yes" >> "$GITHUB_ENV"
+          git config --global user.name "Evilchuck666"
+          git config --global user.email "carlos.martinez.medina1992@gmail.com"
+
+      - uses: actions/checkout@v7
+        with:
+          path: repo
+          persist-credentials: false
+
+      # arch/PKGBUILD in this repository is the source of truth: copy it over
+      # the AUR one and regenerate .SRCINFO. makepkg refuses to run as root.
+      - name: Push PKGBUILD to the AUR
+        run: |
+          set -euo pipefail
+          git clone ssh://aur@aur.archlinux.org/pyvideokit.git aur
+          cp repo/arch/PKGBUILD aur/PKGBUILD
+          useradd -m builder
+          chown -R builder aur
+          cd aur
+          su builder -c 'makepkg --printsrcinfo' > .SRCINFO
+          git config --global --add safe.directory "$PWD"
+          git add PKGBUILD .SRCINFO
+          if git diff --cached --quiet; then
+            echo "AUR package is already at $VERSION."
+            exit 0
+          fi
+          git commit -m "Update to $VERSION"
+          git push origin master
