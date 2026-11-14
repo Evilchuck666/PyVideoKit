@@ -7,23 +7,58 @@
 [![Latest release](https://img.shields.io/github/v/release/Evilchuck666/PyVideoKit?label=download&sort=semver)](https://github.com/Evilchuck666/PyVideoKit/releases/latest)
 [![Build and tests](https://github.com/Evilchuck666/PyVideoKit/actions/workflows/release.yaml/badge.svg?branch=main)](https://github.com/Evilchuck666/PyVideoKit/actions/workflows/release.yaml)
 
-FFmpeg-based video processing toolkit for Python — featuring a library, a CLI, and a desktop GUI.
+**FFmpeg-based video processing for Python: a library, a CLI and a desktop GUI.**
+
+PyVideoKit trims, fades, converts and gives a VHS look to your videos. Use it
+from Python code, from the command line or from a drag-and-drop desktop app,
+on Windows, GNU/Linux or macOS.
 
 🌐 **Website:** https://evilchuck666.github.io/PyVideoKit/
 
----
-
+<!-- SCREENSHOTS:START -->
 ## 📸 Screenshots
 
-| Desktop app | Trim |
-|---|---|
-| ![PyVideoKit-GUI after an FFV1 conversion](site/assets/screenshots/desktop-app.png) | ![PyVideoKit-GUI after a trim](site/assets/screenshots/trim.png) |
-| **Command line** | **Python library** |
-| ![pvk help and a two-second trim](site/assets/screenshots/commands.png) | ![PyVideoKit-Libs Python example](site/assets/screenshots/python-example.png) |
+![PyVideoKit-GUI after an FFV1 conversion](site/assets/screenshots/desktop-app.png)
 
----
+The desktop app after an FFV1 conversion.
 
-## 📦 Installation
+<details>
+<summary>More screenshots</summary>
+
+![PyVideoKit-GUI after a trim](site/assets/screenshots/trim.png)
+
+The desktop app after a trim.
+
+![pvk help and a two-second trim](site/assets/screenshots/commands.png)
+
+The command line: `pvk` help and a two-second trim.
+
+![PyVideoKit-Libs Python example](site/assets/screenshots/python-example.png)
+
+Using PyVideoKit-Libs from Python.
+
+</details>
+
+<!-- SCREENSHOTS:END -->
+
+## ✨ Features
+
+- 📚 **[PyVideoKit-Libs](https://github.com/Evilchuck666/PyVideoKit/tree/main/packages/libs)** — Core Python library. All video processing functions are built on top of FFmpeg, FFprobe, and SoX. Base dependency for the other packages.
+- 💻 **[PyVideoKit-CLI](https://github.com/Evilchuck666/PyVideoKit/tree/main/packages/cli)** — Command-line interface built on PyVideoKit-Libs. Each operation is exposed as a standalone command (`pvk`, `trim-video`, `fade-video`, etc.).
+- 🖥️ **[PyVideoKit-GUI](https://github.com/Evilchuck666/PyVideoKit/tree/main/packages/gui)** — PySide6 desktop GUI. Tabbed interface with drag-and-drop input, batch processing for Convert/VHS/Extract Audio/YouTube.
+- 🏗️ **[arch/](arch)** — PKGBUILD for Arch Linux. Builds `python-pyvideokit-libs`, `python-pyvideokit-cli`, `python-pyvideokit-gui` and the `python-pyvideokit` meta-package. Mirrors the [AUR package base](https://aur.archlinux.org/pkgbase/pyvideokit).
+
+## 📥 Download
+
+| Channel | Package |
+| --- | --- |
+| Arch Linux (AUR) | [python-pyvideokit](https://aur.archlinux.org/pkgbase/pyvideokit) |
+| PyPI | [PyVideoKit](https://pypi.org/project/PyVideoKit/) |
+| GitHub release | [Wheels and source archives](https://github.com/Evilchuck666/PyVideoKit/releases/latest) |
+
+[Release notes](https://github.com/Evilchuck666/PyVideoKit/releases/latest) · [SHA256SUMS.txt](https://github.com/Evilchuck666/PyVideoKit/releases/latest/download/SHA256SUMS.txt)
+
+## 🚀 Getting started
 
 ### 🏗️ Arch Linux (AUR)
 
@@ -44,68 +79,21 @@ pip install PyVideoKit
 This installs PyVideoKit-Libs, PyVideoKit-CLI, and PyVideoKit-GUI in one go.
 Make sure **FFmpeg**, **FFprobe**, and **SoX** are available in your `PATH`.
 
----
-
-## 🖥️ Desktop Integration
-
-Non-Arch users can add PyVideoKit to their application launcher by manually creating the `.desktop` entry and icon.
-
-**1. Save the icon:**
+### ▶️ First run
 
 ```bash
-mkdir -p ~/.local/share/icons/hicolor/scalable/apps
-cat > ~/.local/share/icons/hicolor/scalable/apps/pvk-gui.svg << 'EOF'
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <rect x="4" y="14" width="40" height="30" rx="3" fill="#2d3561"/>
-  <rect x="10" y="19" width="28" height="20" rx="2" fill="#1a2038"/>
-  <polygon points="18,21 18,37 33,29" fill="#ff6b6b"/>
-  <rect x="4" y="6" width="40" height="8" rx="2" fill="#ff6b6b"/>
-  <rect x="11" y="6" width="6" height="8" fill="#ffffff"/>
-  <rect x="23" y="6" width="6" height="8" fill="#ffffff"/>
-  <rect x="35" y="6" width="5" height="8" fill="#ffffff"/>
-</svg>
-EOF
+pvk-gui        # open the desktop app
+pvk --help     # list the command-line tools
 ```
 
-**2. Create the `.desktop` entry:**
+## 📋 Requirements
 
-```bash
-mkdir -p ~/.local/share/applications
-cat > ~/.local/share/applications/pvk-gui.desktop << 'EOF'
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=PyVideoKit
-GenericName=Video Processing Tool
-Comment=FFmpeg-based video processing GUI
-Exec=pvk-gui
-Icon=pvk-gui
-Categories=AudioVideo;Video;AudioVideoEditing;
-Terminal=false
-Keywords=video;ffmpeg;trim;fade;vhs;youtube;convert;
-EOF
-```
+- Python 3.10 or newer.
+- **FFmpeg**, **FFprobe** and **SoX** in your `PATH`.
 
-**3. Refresh the icon cache** *(maybe required in some desktop environments)*:
+## 📚 Learn more
 
-```bash
-gtk-update-icon-cache ~/.local/share/icons/hicolor/
-```
-
-PyVideoKit will now appear in your application launcher.
-
----
-
-## 🗂️ Subprojects
-
-- 📚 **[PyVideoKit-Libs](https://github.com/Evilchuck666/PyVideoKit/tree/main/packages/libs)** — Core Python library. All video processing functions are built on top of FFmpeg, FFprobe, and SoX. Base dependency for the other packages.
-- 💻 **[PyVideoKit-CLI](https://github.com/Evilchuck666/PyVideoKit/tree/main/packages/cli)** — Command-line interface built on PyVideoKit-Libs. Each operation is exposed as a standalone command (`pvk`, `trim-video`, `fade-video`, etc.).
-- 🖥️ **[PyVideoKit-GUI](https://github.com/Evilchuck666/PyVideoKit/tree/main/packages/gui)** — PySide6 desktop GUI. Tabbed interface with drag-and-drop input, batch processing for Convert/VHS/Extract Audio/YouTube.
-- 🏗️ **[arch/](arch)** — PKGBUILD for Arch Linux. Builds `python-pyvideokit-libs`, `python-pyvideokit-cli`, `python-pyvideokit-gui` and the `python-pyvideokit` meta-package. Mirrors the [AUR package base](https://aur.archlinux.org/pkgbase/pyvideokit).
-
----
-
-## 🔧 Build
+Build the packages from a checkout with `make`:
 
 ```bash
 make help          # show all available targets
@@ -114,8 +102,9 @@ make install-all   # build and install all packages locally
 make aur           # build and install AUR packages with makepkg
 ```
 
----
+- [Technical guide](TECHNICAL_GUIDE.md): desktop integration for non-Arch
+  systems and the build targets.
 
 ## ⚖️ License
 
-This project is licensed under the GPLv3 License — see the [LICENSE](LICENSE) file for details.
+PyVideoKit is free software released under the **GNU General Public License v3.0** (GPL-3.0). See [LICENSE](LICENSE).

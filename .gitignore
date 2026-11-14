@@ -3,6 +3,7 @@
 !.gitignore
 !Makefile
 !README.md
+!TECHNICAL_GUIDE.md
 !LICENSE
 !pyproject.toml
 !arch/PKGBUILD
