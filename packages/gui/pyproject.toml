@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PyVideoKit-GUI"
+version = "0.4.3"
+description = "PySide6 desktop app for PyVideoKit: trim, concatenate, fade, VHS effect, WAV extraction, lossless FFV1 masters and 4K ProRes exports for YouTube, with batch processing"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [{name = "Evilchuck666", email = "carlos.martinez.medina1992@gmail.com"}]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    # PySide6 6.12.0 drops a reference to True on every Signal.emit(), which
+    # crashes Python 3.10/3.11 after enough progress updates. True is immortal
+    # from Python 3.12 on, so only older interpreters skip that release.
+    "PySide6>=6.0,!=6.12.0; python_version < '3.12'",
+    "PySide6>=6.0; python_version >= '3.12'",
+    "PyVideoKit-Libs>=0.4.2",
+]
+keywords = ["ffmpeg", "video", "gui", "pyside6", "qt6", "video-processing", "ffv1", "prores", "vhs", "youtube"]
+
+[project.urls]
+Homepage = "https://github.com/Evilchuck666/PyVideoKit-GUI"
+Source = "https://github.com/Evilchuck666/PyVideoKit-GUI"
+Issues = "https://github.com/Evilchuck666/PyVideoKit-GUI/issues"
+Releases = "https://github.com/Evilchuck666/PyVideoKit-GUI/releases"
+
+[project.scripts]
+pvk-gui = "pyvideokit_gui._main:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["pyvideokit_gui"]

@@ -1,0 +1,11 @@
+*
+!*/
+!*.py
+!.gitignore
+!pyproject.toml
+!README.md
+!LICENSE
+!.github/workflows/*.yml
+.venv/
+.vscode/
+build/
