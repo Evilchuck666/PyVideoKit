@@ -5,11 +5,15 @@ on:
     branches: [main]
     paths:
       - 'site/**'
-      - '.github/workflows/pages.yml'
+      - '.github/workflows/pages.yaml'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+# The JavaScript actions below run on Node 24.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 concurrency:
   group: project-pages
@@ -39,10 +43,10 @@ jobs:
           test "$(find site -type f | wc -l)" -eq 7
           test -s site/assets/screenshots/desktop-app.png
           for img in trim commands python-example; do test -s "site/assets/screenshots/$img.png"; done
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
       - name: Deploy GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

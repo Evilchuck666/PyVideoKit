@@ -5,7 +5,7 @@
 ![Requires](https://img.shields.io/badge/requires-FFmpeg%2C%20SoX-blue)
 [![License](https://img.shields.io/badge/license-GPLv3-green)](LICENSE)
 [![Latest release](https://img.shields.io/github/v/release/Evilchuck666/PyVideoKit?label=download&sort=semver)](https://github.com/Evilchuck666/PyVideoKit/releases/latest)
-[![Build and tests](https://github.com/Evilchuck666/PyVideoKit/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/Evilchuck666/PyVideoKit/actions/workflows/release.yml)
+[![Build and tests](https://github.com/Evilchuck666/PyVideoKit/actions/workflows/release.yaml/badge.svg?branch=main)](https://github.com/Evilchuck666/PyVideoKit/actions/workflows/release.yaml)
 
 FFmpeg-based video processing toolkit for Python — featuring a library, a CLI, and a desktop GUI.
 
