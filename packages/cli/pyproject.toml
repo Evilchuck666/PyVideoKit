@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PyVideoKit-CLI"
+version = "0.4.3"
+description = "Command-line interface for PyVideoKit: trim, concatenate, fade, VHS effect, WAV extraction, lossless FFV1 masters and 4K ProRes exports for YouTube"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [{name = "Evilchuck666", email = "carlos.martinez.medina1992@gmail.com"}]
+dependencies = [
+    "click>=8.0",
+    "rich>=13.0",
+    "PyVideoKit-Libs>=0.4.2",
+]
+keywords = ["ffmpeg", "video", "cli", "video-processing", "ffv1", "prores", "vhs", "youtube"]
+
+[project.urls]
+Homepage = "https://github.com/Evilchuck666/PyVideoKit-CLI"
+Source = "https://github.com/Evilchuck666/PyVideoKit-CLI"
+Issues = "https://github.com/Evilchuck666/PyVideoKit-CLI/issues"
+Releases = "https://github.com/Evilchuck666/PyVideoKit-CLI/releases"
+
+[project.scripts]
+pvk              = "pyvideokit_cli._main:cli"
+apply-vhs-effect = "pyvideokit_cli.apply_vhs_effect:main"
+concat-videos    = "pyvideokit_cli.concat_videos:main"
+convert-to-ffv1  = "pyvideokit_cli.convert_to_ffv1:main"
+extract-audio    = "pyvideokit_cli.extract_audio:main"
+fade-video       = "pyvideokit_cli.fade_video:main"
+prepare-youtube  = "pyvideokit_cli.prepare_youtube:main"
+trim-video       = "pyvideokit_cli.trim_video:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["pyvideokit_cli"]
