@@ -1,0 +1,52 @@
+{
+  // FFmpeg, FFprobe and SoX must be in PATH for the smoke tests and for the app itself.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      // One venv at the root with Libs, CLI and GUI in editable mode. Libs goes in the same call, so CLI and GUI
+      // take it from packages/libs and never from PyPI. Also installs "build" for the Makefile's build-* targets.
+      "label": "PyVideoKit: set up venv",
+      "type": "shell",
+      "command": "uv venv --allow-existing .venv && uv pip install --python .venv -e packages/libs -e packages/cli -e packages/gui build",
+      "problemMatcher": []
+    },
+    {
+      // Each package's scripts/smoke_test.py, like CI. The CLI test calls pvk and the standalone commands through
+      // PATH, so the venv's bin/ goes first. The GUI runs headless (Qt offscreen).
+      "label": "PyVideoKit: smoke tests",
+      "type": "shell",
+      "command": "for pkg in libs cli gui; do echo \"== $pkg\"; python -I \"packages/$pkg/scripts/smoke_test.py\" || exit 1; done",
+      "options": {
+        "env": {
+          "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}",
+          "QT_QPA_PLATFORM": "offscreen"
+        },
+        "shell": {
+          "executable": "bash",
+          "args": ["-c"]
+        }
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      // make build-all: wheels of Libs, CLI, GUI and the meta-package in PKGs/, with the venv's python (it has "build").
+      "label": "PyVideoKit: build all wheels",
+      "type": "shell",
+      "command": "make build-all",
+      "options": {
+        "env": {
+          "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}"
+        }
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

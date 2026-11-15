@@ -1,0 +1,25 @@
+{
+  // Both run from the root .venv: create it first with the "PyVideoKit: set up venv" task.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "PyVideoKit: GUI (pvk-gui)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pyvideokit_gui._main",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      // The venv's pvk console script, the same entry point that ships. Asks for the arguments,
+      // e.g. trim-video clip.mp4 --start 5 --end 00:00:10
+      "name": "PyVideoKit: CLI (pvk …)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/.venv/bin/pvk",
+      "args": "${command:pickArgs}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  // Root virtual environment from the "PyVideoKit: set up venv" task, with Libs, CLI and GUI installed in
+  // editable mode, so the GUI and the CLI always import packages/*/src.
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  // src layout: Pylance resolves pyvideokit_libs, pyvideokit_cli and pyvideokit_gui even before the venv exists.
+  "python.analysis.extraPaths": [
+    "packages/libs/src",
+    "packages/cli/src",
+    "packages/gui/src"
+  ]
+}

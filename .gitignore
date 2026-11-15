@@ -1,35 +1,32 @@
-# Virtual environment (uv venv, "set up venv" task of PyVideoKit.code-workspace)
+# Virtual environment at the root ("PyVideoKit: set up venv" task in .vscode/tasks.json)
 .venv/
 
 # Python bytecode
 __pycache__/
 *.py[cod]
 
-# Build output: python -m build in packages/*/ and the root meta-package,
-# make build-* (PKGs/) and the release workflow (dist/ at the root)
+# Build output: python -m build in packages/*/ and at the root (dist/, build/), setuptools metadata
+# (packages/*/src/*.egg-info, PyVideoKit.egg-info) and the wheels of make build-* (PKGs/)
 build/
 dist/
-PKGs/
 *.egg-info/
+PKGs/
 
-# makepkg output when testing arch/PKGBUILD in place (make aur, make clean-aur)
+# makepkg output when testing arch/PKGBUILD in place (make aur, make clean-aur): extracted sources,
+# package tree, the git clone of the repository and the built packages
 arch/src/
 arch/pkg/
 arch/PyVideoKit/
 arch/*.pkg.tar*
 
-# Videos and audio used to try the tools by hand (outputs land next to the input)
-*.mp4
+# Videos and audio used to try the tools by hand. The outputs (*_ffv1.mkv, *_fade, *_vhs.mkv, *_youtube.mov,
+# *.wav, joined_*, trims) and the VHS effect's intermediate files land next to the input.
 *.mkv
+*.mp4
 *.mov
 *.avi
 *.webm
 *.wav
-
-# Editors: the shared VS Code setup lives in PyVideoKit.code-workspace (tracked);
-# .vscode/ stays local
-.idea/
-.vscode/
 
 # Personal Claude Code files
 CLAUDE.local.md

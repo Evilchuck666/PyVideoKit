@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    // Python, the root .venv and the python.analysis.* settings in settings.json
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    // The debugpy configurations in launch.json
+    "ms-python.debugpy",
+    // The four pyproject.toml files (root meta-package and packages/*), whose versions must match
+    "tamasfe.even-better-toml",
+    // .github/workflows/pages.yaml and release.yaml
+    "github.vscode-github-actions"
+  ]
+}
