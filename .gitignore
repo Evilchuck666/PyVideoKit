@@ -1,24 +1,36 @@
-*
-!*/
-!.gitignore
-!Makefile
-!README.md
-!TECHNICAL_GUIDE.md
-!LICENSE
-!pyproject.toml
-!arch/PKGBUILD
-!arch/.SRCINFO
-!.github/workflows/*.yml
-!site/**
-!packages/*/README.md
-!packages/*/LICENSE
-!packages/*/pyproject.toml
-!packages/*/scripts/*.py
-!packages/*/src/**/*.py
+# Virtual environment (uv venv, "set up venv" task of PyVideoKit.code-workspace)
 .venv/
-.vscode/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Build output: python -m build in packages/*/ and the root meta-package,
+# make build-* (PKGs/) and the release workflow (dist/ at the root)
 build/
 dist/
 PKGs/
 *.egg-info/
-__pycache__/
+
+# makepkg output when testing arch/PKGBUILD in place (make aur, make clean-aur)
+arch/src/
+arch/pkg/
+arch/PyVideoKit/
+arch/*.pkg.tar*
+
+# Videos and audio used to try the tools by hand (outputs land next to the input)
+*.mp4
+*.mkv
+*.mov
+*.avi
+*.webm
+*.wav
+
+# Editors: the shared VS Code setup lives in PyVideoKit.code-workspace (tracked);
+# .vscode/ stays local
+.idea/
+.vscode/
+
+# Personal Claude Code files
+CLAUDE.local.md
+.claude/settings.local.json

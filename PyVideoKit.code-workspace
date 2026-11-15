@@ -1,0 +1,130 @@
+{
+  "folders": [
+    {
+      "name": "PyVideoKit",
+      "path": "."
+    }
+  ],
+  // One virtual environment at the root (.venv, ignored by git) with the three packages installed in editable mode,
+  // so the GUI and the CLI always import packages/*/src. Create it with the "set up venv" task.
+  "settings": {
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.analysis.extraPaths": ["packages/libs/src", "packages/cli/src", "packages/gui/src"],
+    "files.associations": {
+      "**/PKGBUILD": "shellscript"
+    },
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.egg-info": true
+    },
+    "search.exclude": {
+      "**/.venv": true,
+      "**/build": true,
+      "**/dist": true,
+      "PKGs": true,
+      "arch/src": true,
+      "arch/pkg": true,
+      "**/__pycache__": true,
+      "**/*.egg-info": true
+    },
+    "files.watcherExclude": {
+      "**/.venv/**": true,
+      "**/build/**": true,
+      "**/dist/**": true,
+      "**/PKGs/**": true,
+      "**/arch/src/**": true,
+      "**/arch/pkg/**": true,
+      "**/__pycache__/**": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.debugpy",
+      "github.vscode-github-actions"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "PyVideoKit: GUI (pvk-gui)",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pyvideokit_gui._main",
+        "cwd": "${workspaceFolder:PyVideoKit}",
+        "console": "integratedTerminal",
+        "justMyCode": true
+      },
+      {
+        // Asks for the arguments, e.g. trim-video clip.mp4 --start 5 --end 00:00:10
+        "name": "PyVideoKit: CLI (pvk …)",
+        "type": "debugpy",
+        "request": "launch",
+        "code": "from pyvideokit_cli._main import cli; cli(prog_name='pvk')",
+        "args": "${command:pickArgs}",
+        "cwd": "${workspaceFolder:PyVideoKit}",
+        "console": "integratedTerminal",
+        "justMyCode": true
+      }
+    ]
+  },
+  // FFmpeg, FFprobe and SoX must be in PATH for the smoke tests and the app itself.
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        // Installs Libs first in the same call, so CLI and GUI take it from packages/libs and never from PyPI.
+        // Also installs "build", which the Makefile's build-* targets use.
+        "label": "PyVideoKit: set up venv",
+        "type": "shell",
+        "command": "uv venv --allow-existing .venv && uv pip install --python .venv -e packages/libs -e packages/cli -e packages/gui build",
+        "options": {
+          "cwd": "${workspaceFolder:PyVideoKit}"
+        },
+        "problemMatcher": []
+      },
+      {
+        // Each package's scripts/smoke_test.py, like CI. The CLI test calls pvk and the other commands through PATH,
+        // so the venv's bin/ goes first. The GUI runs headless (Qt offscreen).
+        "label": "PyVideoKit: smoke tests",
+        "type": "shell",
+        "command": "for pkg in libs cli gui; do echo \"== $pkg\"; python -I \"packages/$pkg/scripts/smoke_test.py\" || exit 1; done",
+        "options": {
+          "cwd": "${workspaceFolder:PyVideoKit}",
+          "env": {
+            "PATH": "${workspaceFolder:PyVideoKit}/.venv/bin:${env:PATH}",
+            "QT_QPA_PLATFORM": "offscreen"
+          },
+          "shell": {
+            "executable": "bash",
+            "args": ["-c"]
+          }
+        },
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        },
+        "problemMatcher": []
+      },
+      {
+        // Wheels of Libs, CLI, GUI and the meta-package in PKGs/, with the venv's python (it has "build").
+        "label": "PyVideoKit: build all wheels",
+        "type": "shell",
+        "command": "make build-all",
+        "options": {
+          "cwd": "${workspaceFolder:PyVideoKit}",
+          "env": {
+            "PATH": "${workspaceFolder:PyVideoKit}/.venv/bin:${env:PATH}"
+          }
+        },
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "problemMatcher": []
+      }
+    ]
+  }
+}
